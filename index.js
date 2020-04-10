@@ -13,7 +13,7 @@ const RegExServerFilename = /([a-z]+)-([0-9])\.([0-9]+)\.([0-9]+)(?:-([a-z]+))?-
 
 const binary = process.argv.shift();
 const file = process.argv.shift();
-const archs = process.argv;
+const platforms = process.argv;
 
 function versionFormat(version) {
     let output = _.filter([version.major, version.minor, version.maintenance, version.build], (num) => !_.isUndefined(num)).join('.');
@@ -99,27 +99,27 @@ let crawler = new Crawler({
                             let filename = pathSegments.pop();
                             if(RegExServerFilename.test(filename)) {
                                 let release = _.chain([
-                                    'filename',
-                                    'project.name',
-                                    'version.major',
-                                    'version.minor',
-                                    'version.maintenance',
-                                    'version.tag',
-                                    'scm',
-                                    'version.build',
-                                    'project.extra',
-                                    'platform.name',
-                                    'platform.extra',
-                                    'extension'
-                                ]).object(RegExServerFilename.exec(filename)).each((val, key, context) => {
-                                    let keys = key.split('.');
-                                    if(keys.length == 2) {
-                                        context[keys[0]] = _.extend(context[keys[0]] || {}, _.object([[keys[1], val]]));
-                                    }
-                                }).omit((value, key) => key.includes('.')).value();
+                                        'filename',
+                                        'project.name',
+                                        'version.major',
+                                        'version.minor',
+                                        'version.maintenance',
+                                        'version.tag',
+                                        'scm',
+                                        'version.build',
+                                        'project.extra',
+                                        'platform.name',
+                                        'platform.extra',
+                                        'extension'
+                                    ]).object(RegExServerFilename.exec(filename)).each((val, key, context) => {
+                                        let keys = key.split('.');
+                                        if(keys.length == 2) {
+                                            context[keys[0]] = _.extend(context[keys[0]] || {}, _.object([[keys[1], val]]));
+                                        }
+                                    }).omit((value, key) => key.includes('.')).value();
                                 release.url = res.request.uri;
                                 release.tags = [];
-                                if(_.contains(archs, release.platform.name)) {
+                                if(_.contains(platforms, release.platform.name)) {
                                     releases.push(release);
                                 } else {
                                     log.info('Unsupported platform ' + release.platform.name);
@@ -160,19 +160,45 @@ crawler.on('drain', () => {
         return;
     }
     releases = _.chain(releases)
-        .sortBy((release) => [projectFormat(lastRelease.project), versionFormat(version), platformFormat(lastRelease.platform)].join('-').replace(/\d+/g, (n) => +n+10000))
+        .sortBy((release) => [
+                projectFormat(release.project),
+                versionFormat(release.version),
+                platformFormat(release.platform)
+            ].join('-').replace(/\d+/g, (n) => +n+10000))
         .value();
-    _.each([[], ['build'], ['maintenance', 'build'], ['minor', 'maintenance', 'build']], (reduceVersion) => {
-        _.chain(releases).map('version').map((version) => _.omit(version, reduceVersion)).uniq(versionFormat).each((version) => {
-            _.chain(archs).each((platform) => {
-                let lastIndex = _.findLastIndex(releases, (release) => _.isUndefined(release.project.extra) && release.platform.name === platform && _.isUndefined(release.platform.extra) && _.chain(release.version).omit(reduceVersion).isEqual(version).value());
-                if(!_.isUndefined(releases[lastIndex])) {
-                    let lastRelease = releases[lastIndex];
-                    lastRelease.tags.push([projectFormat(lastRelease.project), versionFormat(version), platformFormat(lastRelease.platform)].join('-'));
-                }
-            });
+    _.each([
+            [],
+            ['build'],
+            ['maintenance', 'build'],
+            ['minor', 'maintenance', 'build']
+        ], (reduceVersion) => {
+            _.chain(releases)
+                .map('platform')
+                .uniq(platformFormat)
+                .each((platform) => {
+                    _.chain(releases)
+                        .map('project')
+                        .uniq(projectFormat)
+                        .each((project) => {
+                            _.chain(releases)
+                                .omit((release) => !_.isEqual(release.project, project))
+                                .map('version')
+                                .map((version) => _.omit(version, reduceVersion))
+                                .uniq(versionFormat)
+                                .each((version) => {
+                                    let lastRelease = releases[_.findLastIndex(releases, (release) => _.isEqual(platform, release.platform) && _.isEqual(project, release.project) && _.chain(release.version).omit(reduceVersion).isEqual(version).value())];
+                                    if(!_.isUndefined(lastRelease)) {
+                                        lastRelease.tags.push([
+                                                projectFormat(lastRelease.project),
+                                                versionFormat(version),
+                                                platformFormat(lastRelease.platform)
+                                            ].join('-')
+                                        );
+                                    }
+                                });
+                        });
+                });
         });
-    });
     _.chain(releases).each((release) => {
         _.chain(release.tags).each((tag) => {
             output[tag] = release.url.href;
