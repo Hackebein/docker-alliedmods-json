@@ -8,12 +8,13 @@ const _ = require('underscore');
 const log = new Logger();
 //log.setLevel('fatal');
 
-const RegExVersion = /(1(?:\.[0-9]+)+)/;
-const RegExServerFilename = /([a-z]+)-([0-9])\.([0-9]+)\.([0-9]+)(?:-([a-z]+))?-([a-z]+)([0-9]+)(?:-([a-z]+))?-(linux|mac|windows)(?:-([0-9a-z]+))?\.([0-9a-z.]+)/;
-
 const binary = process.argv.shift();
 const file = process.argv.shift();
-const platforms = process.argv;
+const projects = process.argv.shift();
+const platforms = process.argv.shift();
+
+const RegExVersion = new RegExp(`((?:[0-9])\\.(?:[0-9]+))`);
+const RegExServerFilename = new RegExp(`(${projects})-([0-9])\\.([0-9]+)\\.([0-9]+)(?:-([a-z]+))?-([a-z]+)([0-9]+)(?:-([a-z]+))?-(${platforms})(?:-([0-9a-z]+))?\\.([0-9a-z.]+)`);
 
 function versionFormat(version) {
     let output = _.filter([version.major, version.minor, version.maintenance, version.build], (num) => !_.isUndefined(num)).join('.');
@@ -48,7 +49,7 @@ let crawler = new Crawler({
             error.op = 'abort';
         }
         if(_.isUndefined(error.op)) {
-            setTimeout(done, 100);
+            setTimeout(done, 10);
         } else {
             done(error);
         }
@@ -119,11 +120,7 @@ let crawler = new Crawler({
                                     }).omit((value, key) => key.includes('.')).value();
                                 release.url = res.request.uri;
                                 release.tags = [];
-                                if(_.contains(platforms, release.platform.name)) {
-                                    releases.push(release);
-                                } else {
-                                    log.info('Unsupported platform ' + release.platform.name);
-                                }
+                                releases.push(release);
                             } else {
                                 log.error('Unexpected filename ' + filename);
                             }
