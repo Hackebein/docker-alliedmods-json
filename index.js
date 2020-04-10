@@ -166,7 +166,7 @@ crawler.on('drain', () => {
         _.chain(releases).map('version').map((version) => _.omit(version, reduceVersion)).uniq(versionFormat).each((version) => {
             _.chain(archs).each((platform) => {
                 let lastIndex = _.findLastIndex(releases, (release) => _.isUndefined(release.project.extra) && release.platform.name === platform && _.isUndefined(release.platform.extra) && _.chain(release.version).omit(reduceVersion).isEqual(version).value());
-                if(!_.isUndefined(releases[lastIndex]) {
+                if(!_.isUndefined(releases[lastIndex])) {
                     let lastRelease = releases[lastIndex];
                     lastRelease.tags.push([projectFormat(lastRelease.project), versionFormat(version), platformFormat(lastRelease.platform)].join('-'));
                 }
