@@ -195,7 +195,8 @@ crawler.on('drain', () => {
                                 });
                         });
                 });
-        });
+        }
+    );
     _.chain(releases).each((release) => {
         _.chain(release.tags).each((tag) => {
             output[tag] = release.url.href;
