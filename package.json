@@ -1,0 +1,28 @@
+{
+  "name": "docker-alliedmods-json",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --no-deprecation index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hackebein/docker-alliedmods-json.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Hackebein/docker-alliedmods-json/issues"
+  },
+  "homepage": "https://github.com/Hackebein/docker-alliedmods-json#readme",
+  "dependencies": {
+    "crawler": "github:bda-research/node-crawler#9b77f9a",
+    "escape-string-regexp": "^1.0.5",
+    "logger": "0.0.1",
+    "print": "^1.1.0",
+    "underscore": "^1.10.2",
+    "url": "^0.11.0"
+  }
+}
