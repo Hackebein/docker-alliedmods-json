@@ -14,7 +14,7 @@ const projects = process.argv.shift();
 const platforms = process.argv.shift();
 
 const RegExVersion = new RegExp(`((?:[0-9])\\.(?:[0-9]+))`);
-const RegExServerFilename = new RegExp(`(${projects})-([0-9])\\.([0-9]+)\\.([0-9]+)(?:-([a-z]+))?-([a-z]+)([0-9]+)(?:-([a-z]+))?-(${platforms})(?:-([0-9a-z]+))?\\.([0-9a-z.]+)`);
+const RegExServerFilename = new RegExp(`(${projects})(?:-([0-9])\\.([0-9]+)\\.([0-9]+))?(?:-([a-z]+))?-([a-z]+)([0-9]+)(?:-([a-z]+))?-(${platforms})(?:-([0-9a-z]+))?\\.([0-9a-z.]+)`);
 
 function versionFormat(version) {
     let output = _.filter([version.major, version.minor, version.maintenance, version.build], (num) => !_.isUndefined(num)).join('.');
@@ -152,6 +152,11 @@ crawler.queue({
     jail: new RegExp('^' + esr('https://www.amxmodx.org/amxxdrop/') + '(?:' + RegExVersion.source + '(?:' + esr('/') + '(?:' + RegExServerFilename.source + ')?' + ')?' + ')?' + '$'),
 });
 
+crawler.queue({
+    uri: 'https://users.alliedmods.net/~kyles/builds/SteamWorks/',
+    jail: new RegExp('^' + esr('https://users.alliedmods.net/~kyles/builds/SteamWorks/') + '(?:' + RegExServerFilename.source + ')?' + '$'),
+});
+
 crawler.on('drain', () => {
     if(!releases.length) {
         return;
@@ -198,7 +203,7 @@ crawler.on('drain', () => {
         }
     );
     _.chain(releases).each((release) => {
-        _.chain(release.tags).each((tag) => {
+        _.chain(release.tags).uniq().each((tag) => {
             output[tag] = release.url.href;
         });
     });
