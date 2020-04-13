@@ -157,6 +157,11 @@ crawler.queue({
     jail: new RegExp('^' + esr('https://users.alliedmods.net/~kyles/builds/SteamWorks/') + '(?:' + RegExServerFilename.source + ')?' + '$'),
 });
 
+crawler.queue({
+    uri: 'https://users.alliedmods.net/~drifter/builds/dhooks/',
+    jail: new RegExp('^' + esr('https://users.alliedmods.net/~drifter/builds/dhooks/') + '(?:' + RegExVersion.source + '(?:' + esr('/') +  + '(?:' + RegExServerFilename.source + ')?' + ')?' + ')?' + '$'),
+});
+
 crawler.on('drain', () => {
     if(!releases.length) {
         return;
