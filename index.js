@@ -17,9 +17,14 @@ const RegExVersion = new RegExp(`((?:[0-9])\\.(?:[0-9]+))`);
 const RegExServerFilename = new RegExp(`(${projects})(?:-([0-9])\\.([0-9]+)\\.([0-9]+))?(?:-([a-z]+))?-([a-z]+)([0-9]+)(?:-([a-z]+))?-(${platforms})(?:-([0-9a-z]+))?\\.([0-9a-z.]+)`);
 
 function versionFormat(version) {
-    let output = _.filter([version.major, version.minor, version.maintenance, version.build], (num) => !_.isUndefined(num)).join('.');
-    if(!output.includes('.')) {
-        output = 'latest';
+    let output = _.filter([version.major, version.minor, version.maintenance, version.build], (num) => !_.isUndefined(num));
+    if(!_.isEmpty(output)) {
+        output = output.join('.');
+        if(!_.isUndefined(version.major) && !output.includes('.')) {
+            output = 'latest';
+        }
+    } else {
+        output = "latest";
     }
     return _.filter([output, version.tag], (num) => !_.isUndefined(num)).join('-');
 }
@@ -172,6 +177,7 @@ crawler.on('drain', () => {
                 versionFormat(release.version),
                 platformFormat(release.platform)
             ].join('-').replace(/\d+/g, (n) => +n+10000))
+        .uniq('filename')
         .value();
     _.each([
             [],
